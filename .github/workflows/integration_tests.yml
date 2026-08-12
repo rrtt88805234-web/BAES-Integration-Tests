@@ -2,7 +2,7 @@ name: M1 -> M2a Integration Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ]
     paths:
       - 'runtime/**'
       - 'tests/**'
@@ -10,7 +10,7 @@ on:
       - 'pytest.ini'
       - '.github/workflows/integration_tests.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ]
     paths:
       - 'runtime/**'
       - 'tests/**'
