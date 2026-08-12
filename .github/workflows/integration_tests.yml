@@ -60,7 +60,7 @@ jobs:
             -v
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
           flags: integration-tests
@@ -69,14 +69,14 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-py${{ matrix.python-version }}
           path: test-results.xml
 
       - name: Upload coverage reports
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-reports-py${{ matrix.python-version }}
           path: htmlcov/
@@ -123,7 +123,7 @@ jobs:
 
       - name: Comment PR with coverage
         if: github.event_name == 'pull_request'
-        uses: py-cov-action/python-coverage-comment-action@v3
+        uses: py-cov-action/python-coverage-comment-action@v4
         with:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -161,12 +161,27 @@ jobs:
     steps:
       - name: Check job status
         run: |
+          FAILED=0
           if [ "${{ needs.integration-tests.result }}" != "success" ]; then
-            echo "Integration tests failed"
+            echo "⚠️ Integration tests: ${{ needs.integration-tests.result }}"
+            FAILED=1
+          else
+            echo "✅ Integration tests passed"
+          fi
+          if [ "${{ needs.test-coverage.result }}" != "success" ] && [ "${{ needs.test-coverage.result }}" != "skipped" ]; then
+            echo "⚠️ Coverage analysis: ${{ needs.test-coverage.result }}"
+            FAILED=1
+          else
+            echo "✅ Coverage analysis passed"
+          fi
+          if [ "${{ needs.security-checks.result }}" != "success" ]; then
+            echo "⚠️ Security checks: ${{ needs.security-checks.result }}"
+            FAILED=1
+          else
+            echo "✅ Security checks passed"
+          fi
+          if [ $FAILED -eq 1 ]; then
+            echo "❌ Some checks failed"
             exit 1
           fi
-          if [ "${{ needs.test-coverage.result }}" != "success" ]; then
-            echo "Coverage analysis failed"
-            exit 1
-          fi
-          echo "All checks passed successfully!"
+          echo "✅ All checks passed successfully!"
