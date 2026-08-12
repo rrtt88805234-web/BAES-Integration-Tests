@@ -59,8 +59,18 @@ jobs:
             --junitxml=test-results.xml \
             -v
 
+      - name: Verify generated files
+        if: always()
+        run: |
+          echo "=== Checking for test results ==="
+          ls -la test-results.xml || echo "test-results.xml not found"
+          echo "=== Checking for coverage reports ==="
+          ls -la coverage.xml || echo "coverage.xml not found"
+          ls -la htmlcov/ || echo "htmlcov directory not found"
+
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        if: always()
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
           flags: integration-tests
@@ -82,7 +92,7 @@ jobs:
           path: htmlcov/
 
       - name: Publish test results
-        if: always()
+        if: always() && hashFiles('test-results.xml') != ''
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: test-results.xml
@@ -123,7 +133,7 @@ jobs:
 
       - name: Comment PR with coverage
         if: github.event_name == 'pull_request'
-        uses: py-cov-action/python-coverage-comment-action@v4
+        uses: py-cov-action/python-coverage-comment-action@v3
         with:
           GITHUB_TOKEN: ${{ github.token }}
 
